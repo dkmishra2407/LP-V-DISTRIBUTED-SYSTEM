@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/a2 cobra/a2 cobra.iml" filepath="$PROJECT_DIR$/a2 cobra/a2 cobra.iml" />
+      <module fileurl="file://$PROJECT_DIR$/cobra/cobra.iml" filepath="$PROJECT_DIR$/cobra/cobra.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ds.iml" filepath="$PROJECT_DIR$/ds.iml" />
+    </modules>
+  </component>
+</project>

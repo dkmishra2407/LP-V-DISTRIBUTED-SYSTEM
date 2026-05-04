@@ -1,0 +1,22 @@
+idlj -fall UpperCase.idl
+
+✅ Correct CORBA Execution Flow
+🔹 Step 1: Compile FIRST
+& "C:\Program Files (x86)\Java\jdk1.8.0_202\bin\javac.exe" *.java UpperCaseModule\*.java
+
+👉 This creates:
+
+UpperCaseServer.class
+UpperCaseClient.class
+
+🔹 Step 2: Start ORBD (Terminal 1)
+& "C:\Program Files (x86)\Java\jdk1.8.0_202\bin\orbd.exe" -ORBInitialPort 1050
+
+🔹 Step 3: Run Server (Terminal 2)
+& "C:\Program Files (x86)\Java\jdk1.8.0_202\bin\java.exe" UpperCaseServer -ORBInitialPort 1050 -ORBInitialHost localhost
+
+👉 ❗ Notice:
+
+NO .java
+🔹 Step 4: Run Client (Terminal 3)
+& "C:\Program Files (x86)\Java\jdk1.8.0_202\bin\java.exe" UpperCaseClient -ORBInitialPort 1050 -ORBInitialHost localhost
