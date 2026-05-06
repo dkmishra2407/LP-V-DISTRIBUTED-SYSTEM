@@ -1,154 +1,84 @@
-//import java.util.*;
-//
-//public class TokenRing {
-//
-//    public static void main(String[] args) {
-//        Scanner sc = new Scanner(System.in);
-//
-//        System.out.print("Enter Number Of Nodes: ");
-//        int n = sc.nextInt();
-//
-//        System.out.println("Ring:");
-//        for (int i = 0; i < n; i++)
-//            System.out.print(i + " -> ");
-//        System.out.println("0");
-//
-//        int choice;
-//        int token = 0; // token starts at 0
-//
-//        do {
-//            System.out.println("\nCurrent Token at Process: " + token);
-//
-//            System.out.print("Enter Sender: "); int sender = sc.nextInt();
-//            System.out.print("Enter Receiver: "); int receiver = sc.nextInt();
-//            sc.nextLine();
-//            System.out.print("Enter Data: "); String data = sc.nextLine();
-//
-//            // move token until it reaches sender
-//            System.out.println("\nToken Passing:");
-//            while (token != sender) {
-//                System.out.print(token + " -> ");
-//                token = (token + 1) % n;
-//            }
-//            System.out.println(sender);
-//
-//            // critical section
-//            System.out.println("\nProcess " + sender + " ENTERS Critical Section");
-//            System.out.println("Sending Data: " + data);
-//
-//            // data forwarding
-//            int i = sender;
-//            while (i != receiver) {
-//                System.out.println("Data forwarded By " + i + " To " + (i+1)%n);
-//                i = (i + 1) % n;
-//            }
-//
-//            System.out.println("Receiver " + receiver + " received data: " + data);
-//            System.out.println("Process " + sender + " EXITS Critical Section");
-//
-//            // pass token to next process
-//            token = (sender + 1) % n;
-//
-//            System.out.print("\nEnter 1 to continue, 0 to stop: ");
-//            choice = sc.nextInt();
-//
-//        } while (choice == 1);
-//    }
-//}
-
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.net.*;
-import java.util.Scanner;
 
 public class TokenRing {
+    private int myPort;
+    private String nextHost;
+    private int nextPort;
+    private boolean hasToken;
 
-    static int id;
-    static int port;
-    static String nextHost;
-    static int nextPort;
+    TokenRing(int myPort, String nextHost, int nextPort, boolean hasToken) {
+        this.myPort = myPort;
+        this.nextHost = nextHost;
+        this.nextPort = nextPort;
+        this.hasToken = hasToken;
+    }
+
+    public void startCirculation() throws Exception {
+
+        // Server thread to receive token
+        new Thread(() -> {
+            try{
+                ServerSocket serverSocket = new ServerSocket(myPort);
+                System.out.println("Listening on port " + myPort);
+
+                while (true) {
+                    Socket socket = serverSocket.accept();
+                    DataInputStream in = new DataInputStream(socket.getInputStream());
+
+                    String token = in.readUTF();
+
+                    if ("TOKEN".equals(token)) {
+                        System.out.println("Token RECEIVED from " + socket.getRemoteSocketAddress());
+                        hasToken = true;
+                    }
+
+                    socket.close();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+
+        // new Thread().start();
+
+        // Main loop
+        while (true) {
+            if (hasToken) {
+                enterCriticalSection();
+                sendToken();
+                hasToken = false;
+            }
+            Thread.sleep(2000);
+        }
+    }
+
+    private void enterCriticalSection() throws Exception {
+        System.out.println(">>>> ENTERED CRITICAL SECTION");
+        Thread.sleep(3000);
+        System.out.println("<<<< EXITED CRITICAL SECTION");
+    }
+
+    private void sendToken() {
+        try (Socket socket = new Socket(nextHost, nextPort);
+             DataOutputStream out = new DataOutputStream(socket.getOutputStream())) {
+
+            out.writeUTF("TOKEN");
+            System.out.println("Token SENT to " + socket.getRemoteSocketAddress());
+
+        } catch (Exception e) {
+            System.out.println("Failed to send token: " + e.getMessage());
+        }
+    }
 
     public static void main(String[] args) throws Exception {
+        int myPort = Integer.parseInt(args[0]);
+        String nextHost = args[1];
+        int nextPort = Integer.parseInt(args[2]);
+        boolean hasToken = Boolean.parseBoolean(args[3]);
 
-        Scanner sc = new Scanner(System.in);
-
-        System.out.print("Enter Process ID: ");
-        id = sc.nextInt();
-
-        System.out.print("Enter Port to Listen: ");
-        port = sc.nextInt();
-
-        sc.nextLine(); // consume newline
-
-        System.out.print("Enter Next Process IP: ");
-        nextHost = sc.nextLine();
-
-        System.out.print("Enter Next Process Port: ");
-        nextPort = sc.nextInt();
-
-        // Start server thread to receive token
-        new Thread(() -> receiveToken()).start();
-
-        // If this is process 0 → generate token initially
-        if (id == 0) {
-            Thread.sleep(2000);
-            sendToken("TOKEN");
-        }
-    }
-
-    // 🔹 Receive Token
-    public static void receiveToken() {
-        try {
-            ServerSocket server = new ServerSocket(port);
-
-            while (true) {
-                Socket socket = server.accept();
-
-                BufferedReader in = new BufferedReader(
-                        new InputStreamReader(socket.getInputStream()));
-
-                String token = in.readLine();
-
-                System.out.println("\nProcess " + id + " received TOKEN");
-
-                // Enter Critical Section
-                criticalSection();
-
-                // Pass token to next
-                sendToken("TOKEN");
-
-                socket.close();
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    // 🔹 Send Token
-    public static void sendToken(String token) {
-        try {
-            Socket socket = new Socket(nextHost, nextPort);
-
-            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-            out.println(token);
-
-            System.out.println("Process " + id + " sent TOKEN to next");
-
-            socket.close();
-
-        } catch (Exception e) {
-            System.out.println("Next process not ready...");
-        }
-    }
-
-    // 🔹 Critical Section
-    public static void criticalSection() {
-        try {
-            System.out.println(">>> Process " + id + " ENTERING CS");
-            Thread.sleep(3000); // simulate work
-            System.out.println("<<< Process " + id + " EXITING CS");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        TokenRing node = new TokenRing(myPort, nextHost, nextPort, hasToken);
+        node.startCirculation();
     }
 }

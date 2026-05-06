@@ -12,10 +12,10 @@ public class AddServer extends UnicastRemoteObject implements RemoteAdd {
 
     public static void main(String[] args) throws Exception {
         // Start registry programmatically
-        LocateRegistry.createRegistry(1099);
+//        LocateRegistry.createRegistry(1099);
 
         AddServer obj = new AddServer();
-        Naming.rebind("rmi://localhost:1099/AddService", obj);
+        Naming.rebind("rmi://localhost/AddService", obj);
 
         System.out.println("Server Ready");
     }

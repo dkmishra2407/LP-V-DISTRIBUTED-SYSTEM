@@ -9,7 +9,7 @@ s.listen(10)
 
 num = int(input("Enter number of clients: "))
 clients = [s.accept()[0] for _ in range(num)]
-
+ 
 # THIS INFINITE LOOP IS A DAEMON (SIMPLIFIED)
 while True:
     times = []
